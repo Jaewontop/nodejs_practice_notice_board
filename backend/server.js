@@ -11,9 +11,6 @@ app.listen(3001, function () {
   console.log("listening on 3001");
 });
 
-// let id = 2;
-// var commentsList = [{ id: 1, user: "jaewon", content: "재밌다 히히" }];
-
 var connection = mysql.createConnection({
   host: "localhost",
   user: "test",
@@ -22,14 +19,10 @@ var connection = mysql.createConnection({
 });
 connection.connect();
 
-connection.query("SELECT * from USER", function (error, results, fields) {
-  if (error) throw error;
-  console.log("users: ", results);
-});
-
 app.use(express.static(path.join(__dirname, "../front/build")));
 
 app.use(cors(), function (req, res, next) {
+  // cors 문제 해결
   res.header("Access-Control-Allow-Origin", "http://localhost:3000"); // update to match the domain you will make the request from
   res.header(
     "Access-Control-Allow-Headers",
@@ -52,9 +45,16 @@ app.get("/comments", async (req, res) => {
 
 app.post("/comments", async (req, res) => {
   const content = req.body.content;
-  // commentsList.push({ id: id++, content: content }); //왜 ID에 3이 아니라 2가 들어가지?(처음에)
   const sqlQuery = "insert into test.user(userid, username) values (?,?)";
   connection.query(sqlQuery, ["Jaewon", content], (err, result, fields) => {
     res.send("success!" + content);
+  });
+});
+
+app.post("/comments/delete", async (req, res) => {
+  const id = req.body.id;
+  const sqlQuery = "delete from user where id = ?";
+  connection.query(sqlQuery, [id], (err, result, fields) => {
+    res.send("Deleted!" + id);
   });
 });
