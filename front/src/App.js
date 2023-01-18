@@ -3,11 +3,12 @@ import "./App.css";
 import axios from "axios";
 import React, { useState } from "react";
 
-const URL = "localhost:3001";
+const URL = "http://localhost:3000/comments";
 
 function App() {
   const comments = ["너무 좋아요우ㅜㅜ", "행복해요!!"];
   const sendComment = async (content) => {
+    console.log(content);
     axios
       .post(URL, {
         content: content,
