@@ -2,6 +2,8 @@ import logo from "./logo.svg";
 import "./App.css";
 import axios from "axios";
 import React, { useState, useEffect } from "react";
+import Signup from "./page/Signup";
+import Signin from "./page/Signin";
 
 const URL = "http://localhost:3001/comments";
 
@@ -71,6 +73,8 @@ function App() {
           +
         </div>
       </div>
+      {/* <Signup />
+      <Signin /> */}
     </div>
   );
 }
@@ -92,6 +96,7 @@ function commentBox(comment) {
         // 항상 실행
       });
   };
+
   return (
     <div id="commentBox">
       <p>{comment.username}</p>

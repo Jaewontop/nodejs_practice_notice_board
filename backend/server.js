@@ -3,9 +3,19 @@ const path = require("path");
 const app = express();
 const mysql = require("mysql");
 const cors = require("cors");
+// const session = require("express-session");
+// const fileStore = require("session-file-store")(session);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+// app.use(
+//   session({
+//     secret: "0912078@@",
+//     resave: false,
+//     saveUninitialized: true,
+//     store: new fileStore(),
+//   })
+// );
 
 app.listen(3001, function () {
   console.log("listening on 3001");
@@ -19,7 +29,7 @@ var connection = mysql.createConnection({
 });
 connection.connect();
 
-app.use(express.static(path.join(__dirname, "../front/build")));
+// app.use(express.static(path.join(__dirname, "../front/build")));
 
 app.use(cors(), function (req, res, next) {
   // cors 문제 해결
@@ -31,8 +41,15 @@ app.use(cors(), function (req, res, next) {
   next();
 });
 
-app.get("/", function (req, res) {
+app.get("/", function (req, res, next) {
+  // console.log(req.session);
   res.sendFile(path.join(__dirname, "../front/build/index.html"));
+  // if (req.session.num === undefined) {
+  //   req.session.num = 1;
+  // } else {
+  //   req.session.num = req.session.num + 1;
+  // }
+  // res.send(`Views:${req.session.num}`);
 });
 
 app.get("/comments", async (req, res) => {
