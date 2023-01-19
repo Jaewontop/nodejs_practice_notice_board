@@ -53,7 +53,7 @@ app.get("/", function (req, res, next) {
 });
 
 app.get("/comments", async (req, res) => {
-  const sqlQuery = "select * from user";
+  const sqlQuery = "select * from board";
   connection.query(sqlQuery, (err, result, fields) => {
     if (err) throw err;
     res.json(result);
@@ -62,7 +62,7 @@ app.get("/comments", async (req, res) => {
 
 app.post("/comments", async (req, res) => {
   const content = req.body.content;
-  const sqlQuery = "insert into test.user(userid, username) values (?,?)";
+  const sqlQuery = "insert into test.board(userid, content) values (?,?)";
   connection.query(sqlQuery, ["Jaewon", content], (err, result, fields) => {
     res.send("success!" + content);
   });
@@ -73,5 +73,53 @@ app.post("/comments/delete", async (req, res) => {
   const sqlQuery = "delete from user where id = ?";
   connection.query(sqlQuery, [id], (err, result, fields) => {
     res.send("Deleted!" + id);
+  });
+});
+
+app.post("/signup", async (req, res) => {
+  const user_id = req.body.id;
+  const user_pw = req.body.pw;
+  const user_nickname = req.body.nickname;
+
+  if (!user_id) {
+    res.send("아이디를 입력해주세요");
+  } else if (!user_pw) {
+    res.send("비밀번호를 입력해주세요");
+  }
+
+  const id_check_sqlQuery = "select user_id from user_info where user_id = ?";
+  const nickname_check_sqlQuery =
+    "select user_nickname from user_info where user_nickname = ?";
+  const insert_user_info_sqlUery =
+    "insert into test.user_info(user_id, user_pw, user_nickname) values (?,?,?)";
+  connection.query(id_check_sqlQuery, [user_id], (err, result, fields) => {
+    if (err) throw err;
+    if (result.length == 0) {
+      //DB에 중복되는 id값이 없음
+      connection.query(
+        nickname_check_sqlQuery,
+        [user_nickname],
+        (err, result, field) => {
+          if (err) throw err;
+          if (result.length == 0) {
+            //DB에 중복되는 nickname값이 없음
+            connection.query(
+              //모두 확인되었으니 db에 id,pw, signupdttm 입력
+              insert_user_info_sqlUery,
+              [user_id, user_pw, user_nickname],
+              (err, result, fields) => {
+                if (err) throw err;
+                console.log("[DEBUG]:" + result);
+                res.send(1);
+              }
+            );
+          } else {
+            res.send("중복되는 닉네임이 있습니다. 다른 닉네임을 입력해주세요");
+          }
+        }
+      );
+    } else {
+      res.send("중복 아이디가 존재합니다. 다른 아이디를 입력해주세요");
+    }
   });
 });
