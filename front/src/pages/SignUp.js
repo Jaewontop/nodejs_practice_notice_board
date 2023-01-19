@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const URL = "http://localhost:3001/signup";
+const successCode = "success";
 
 export default function SignUp() {
   const [id, setId] = useState("");
@@ -33,11 +35,6 @@ export default function SignUp() {
       });
   };
 
-  useEffect(() => {
-    if (errorMessage == 1) {
-    }
-  }, [errorMessage]);
-
   return (
     <div id="accounts">
       <h1> 회원가입 해주세요</h1>
@@ -55,7 +52,13 @@ export default function SignUp() {
       >
         회원가입
       </div>
-      {<p>{errorMessage}</p>}
+      {errorMessage == successCode ? (
+        <p>
+          회원가입에 성공했습니다. <Link to="/">홈으로 가기</Link>
+        </p>
+      ) : (
+        <p>{errorMessage}</p>
+      )}
     </div>
   );
 }

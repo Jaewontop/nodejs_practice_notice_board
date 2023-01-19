@@ -110,7 +110,7 @@ app.post("/signup", async (req, res) => {
               (err, result, fields) => {
                 if (err) throw err;
                 console.log("[DEBUG]:" + result);
-                res.send(1);
+                res.send("success");
               }
             );
           } else {
