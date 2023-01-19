@@ -82,9 +82,9 @@ app.post("/signup", async (req, res) => {
   const user_nickname = req.body.nickname;
 
   if (!user_id) {
-    res.send("아이디를 입력해주세요");
+    res.end("아이디를 입력해주세요");
   } else if (!user_pw) {
-    res.send("비밀번호를 입력해주세요");
+    res.end("비밀번호를 입력해주세요");
   }
 
   const id_check_sqlQuery = "select user_id from user_info where user_id = ?";
@@ -110,16 +110,42 @@ app.post("/signup", async (req, res) => {
               (err, result, fields) => {
                 if (err) throw err;
                 console.log("[DEBUG]:" + result);
-                res.send("success");
+                res.end("success");
               }
             );
           } else {
-            res.send("중복되는 닉네임이 있습니다. 다른 닉네임을 입력해주세요");
+            res.end("중복되는 닉네임이 있습니다. 다른 닉네임을 입력해주세요");
           }
         }
       );
     } else {
-      res.send("중복 아이디가 존재합니다. 다른 아이디를 입력해주세요");
+      res.end("중복 아이디가 존재합니다. 다른 아이디를 입력해주세요");
     }
   });
+});
+
+app.post("/signin", async (req, res) => {
+  const user_id = req.body.id;
+  const user_pw = req.body.pw;
+
+  if (!user_id) {
+    res.end("아이디를 입력해주세요");
+  } else if (!user_pw) {
+    res.end("비밀번호를 입력해주세요");
+  }
+
+  const login_check_sqlQuery =
+    "select user_id, user_pw from user_info where user_id = ? and user_pw = ?";
+  connection.query(
+    login_check_sqlQuery,
+    [user_id, user_pw],
+    (err, result, field) => {
+      if (err) throw err;
+      if (result.length == 0) {
+        res.end("아이디나 비밀번호가 틀렸습니다");
+      } else {
+        res.end("success");
+      }
+    }
+  );
 });

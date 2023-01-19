@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const URL = "http://localhost:3001/signin";
+const successCode = "success";
 
 export default function SignIn() {
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const onChangeId = (e) => {
     setId(e.target.value);
@@ -15,19 +18,18 @@ export default function SignIn() {
   };
 
   const signIn = async (id, pw) => {
+    console.log("[DEBUG]: signin nnn");
     axios
       .post(URL, {
         id: id,
         pw: pw,
       })
       .then(function (response) {
-        console.log("[DEBUG] response:" + response);
+        setErrorMessage(response.data);
+        console.log(response.data);
       })
       .catch(function (error) {
         console.log("[DEBUG] error:" + error);
-      })
-      .then(function () {
-        // 항상 실행
       });
   };
 
@@ -38,9 +40,21 @@ export default function SignIn() {
       <input onChange={onChangeId}></input>
       <h3>Pw</h3>
       <input onChange={onChangePw}></input>
-      <div className="button" onClick={signIn(id, pw)}>
+      <div
+        className="button"
+        onClick={() => {
+          signIn(id, pw);
+        }}
+      >
         로그인
       </div>
+      {errorMessage == successCode ? (
+        <p>
+          로그인에 성공했습니다. <Link to="/">홈으로 가기</Link>
+        </p>
+      ) : (
+        <p>{errorMessage}</p>
+      )}
     </div>
   );
 }
