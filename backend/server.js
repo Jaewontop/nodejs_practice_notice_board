@@ -5,9 +5,11 @@ const mysql = require("mysql");
 const cors = require("cors");
 // const session = require("express-session");
 // const fileStore = require("session-file-store")(session);
+var cookieParser = require("cookie-parser");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 // app.use(
 //   session({
 //     secret: "0912078@@",
@@ -29,27 +31,34 @@ var connection = mysql.createConnection({
 });
 connection.connect();
 
-// app.use(express.static(path.join(__dirname, "../front/build")));
+app.use(express.static(path.join(__dirname, "../front/build")));
 
-app.use(cors(), function (req, res, next) {
-  // cors 문제 해결
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000"); // update to match the domain you will make the request from
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
+// app.use(
+//   cors({
+//     origin: true,
+//     credentials: true,
+//     methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
+//   }),
+//   function (req, res, next) {
+//     // cors 문제 해결
+//     res.header("Access-Control-Allow-Origin", "http://localhost:3000"); // update to match the domain you will make the request from
+//     res.header(
+//       "Access-Control-Allow-Headers",
+//       "Origin, X-Requested-With, Content-Type, Accept"
+//     );
+//     next();
+//   }
+// );
+
+app.get("/", function (req, res) {
+  res.sendFile(path.join(__dirname, "../front/build/index.html"));
 });
 
-app.get("/", function (req, res, next) {
-  // console.log(req.session);
-  res.sendFile(path.join(__dirname, "../front/build/index.html"));
-  // if (req.session.num === undefined) {
-  //   req.session.num = 1;
-  // } else {
-  //   req.session.num = req.session.num + 1;
-  // }
-  // res.send(`Views:${req.session.num}`);
+app.post("/", function (req, res) {
+  res.send({
+    is_logined: req.cookies.is_logined,
+    user_nickname: req.cookies.user_nickname,
+  });
 });
 
 app.get("/comments", async (req, res) => {
@@ -70,8 +79,9 @@ app.post("/comments", async (req, res) => {
 
 app.post("/comments/delete", async (req, res) => {
   const id = req.body.id;
-  const sqlQuery = "delete from user where id = ?";
+  const sqlQuery = "delete from board where id = ?";
   connection.query(sqlQuery, [id], (err, result, fields) => {
+    if (err) res.send("err:" + err);
     res.send("Deleted!" + id);
   });
 });
@@ -104,12 +114,13 @@ app.post("/signup", async (req, res) => {
           if (result.length == 0) {
             //DB에 중복되는 nickname값이 없음
             connection.query(
-              //모두 확인되었으니 db에 id,pw, signupdttm 입력
+              //모두 확인되었으니 db에 id,pw, nickname 입력
               insert_user_info_sqlUery,
               [user_id, user_pw, user_nickname],
               (err, result, fields) => {
                 if (err) throw err;
-                console.log("[DEBUG]:" + result);
+                res.cookie("is_logined", "true", { maxAge: 10000 });
+                res.cookie("user_nickname", user_nickname, { maxAge: 10000 });
                 res.end("success");
               }
             );
@@ -134,16 +145,20 @@ app.post("/signin", async (req, res) => {
     res.end("비밀번호를 입력해주세요");
   }
 
-  const login_check_sqlQuery =
-    "select user_id, user_pw from user_info where user_id = ? and user_pw = ?";
+  const login_check_get_nickname_sqlQuery =
+    "select user_nickname from user_info where user_id = ? and user_pw = ?";
   connection.query(
-    login_check_sqlQuery,
+    login_check_get_nickname_sqlQuery,
     [user_id, user_pw],
     (err, result, field) => {
       if (err) throw err;
       if (result.length == 0) {
         res.end("아이디나 비밀번호가 틀렸습니다");
       } else {
+        let user_nickname = result[0].user_nickname;
+        console.log("DEBUG user_nickname:" + user_nickname);
+        res.cookie("is_logined", "true", { maxAge: 10000 });
+        res.cookie("user_nickname", user_nickname, { maxAge: 10000 });
         res.end("success");
       }
     }

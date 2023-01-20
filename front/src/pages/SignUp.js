@@ -29,6 +29,9 @@ export default function SignUp() {
       .then(function (response) {
         setErrorMessage(response.data);
         console.log(response.data);
+        if (response.data == "success") {
+          window.location.href = "/";
+        }
       })
       .catch(function (error) {
         console.log("[DEBUG] error:" + error);
@@ -52,13 +55,7 @@ export default function SignUp() {
       >
         회원가입
       </div>
-      {errorMessage == successCode ? (
-        <p>
-          회원가입에 성공했습니다. <Link to="/">홈으로 가기</Link>
-        </p>
-      ) : (
-        <p>{errorMessage}</p>
-      )}
+      <p>{errorMessage}</p>
     </div>
   );
 }
