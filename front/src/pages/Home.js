@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 const COMMENT_URL = "http://localhost:3001/comments";
 const HOME_URL = "http://localhost:3001/";
+const LOGOUT_URL = "http://localhost:3001/logout";
 
 function Home() {
   const [text, setText] = useState("");
@@ -75,6 +76,12 @@ function Home() {
       });
   };
 
+  const logOut = async () => {
+    axios.post(LOGOUT_URL).then(function (response) {
+      console.log("[DEBUG] response:" + response);
+    });
+  };
+
   const onChange = (e) => {
     setText(e.target.value);
   };
@@ -95,9 +102,14 @@ function Home() {
           <Link to="/signin">
             <h3>{userNickname}</h3>
           </Link>
-          <Link to="/signup">
-            <h3>로그아웃</h3>
-          </Link>
+          <div
+            className="button"
+            onClick={() => {
+              logOut();
+            }}
+          >
+            로그아웃
+          </div>
         </header>
       )}
       <h1>위로의 말</h1>

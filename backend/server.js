@@ -3,21 +3,21 @@ const path = require("path");
 const app = express();
 const mysql = require("mysql");
 const cors = require("cors");
-// const session = require("express-session");
-// const fileStore = require("session-file-store")(session);
+const session = require("express-session");
+const fileStore = require("session-file-store")(session);
 var cookieParser = require("cookie-parser");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-// app.use(
-//   session({
-//     secret: "0912078@@",
-//     resave: false,
-//     saveUninitialized: true,
-//     store: new fileStore(),
-//   })
-// );
+app.use(
+  session({
+    secret: "0912078@@",
+    resave: false,
+    saveUninitialized: true,
+    store: new fileStore(),
+  })
+);
 
 app.listen(3001, function () {
   console.log("listening on 3001");
@@ -59,6 +59,12 @@ app.post("/", function (req, res) {
     is_logined: req.cookies.is_logined,
     user_nickname: req.cookies.user_nickname,
   });
+});
+
+app.post("/logout", function (req, res) {
+  console.log("im logout");
+  res.clearCookie("is_logined");
+  res.clearCookie("user_nickname").redirect("/");
 });
 
 app.get("/comments", async (req, res) => {
@@ -119,8 +125,12 @@ app.post("/signup", async (req, res) => {
               [user_id, user_pw, user_nickname],
               (err, result, fields) => {
                 if (err) throw err;
-                res.cookie("is_logined", "true", { maxAge: 10000 });
-                res.cookie("user_nickname", user_nickname, { maxAge: 10000 });
+                res.cookie("is_logined", "true", {
+                  maxAge: Date.now() + 60 * 60 * 24 * 30,
+                });
+                res.cookie("user_nickname", user_nickname, {
+                  maxAge: Date.now() + 60 * 60 * 24 * 30,
+                });
                 res.end("success");
               }
             );
@@ -157,8 +167,12 @@ app.post("/signin", async (req, res) => {
       } else {
         let user_nickname = result[0].user_nickname;
         console.log("DEBUG user_nickname:" + user_nickname);
-        res.cookie("is_logined", "true", { maxAge: 10000 });
-        res.cookie("user_nickname", user_nickname, { maxAge: 10000 });
+        res.cookie("is_logined", "true", {
+          maxAge: Date.now() + 60 * 60 * 24 * 30,
+        });
+        res.cookie("user_nickname", user_nickname, {
+          maxAge: Date.now() + 60 * 60 * 24 * 30,
+        });
         res.end("success");
       }
     }
