@@ -2,10 +2,19 @@ const express = require("express");
 const path = require("path");
 const app = express();
 const mysql = require("mysql");
-const cors = require("cors");
+// const cors = require("cors");
 const session = require("express-session");
-const fileStore = require("session-file-store")(session);
-var cookieParser = require("cookie-parser");
+let MySQLStore = require("express-mysql-session")(session);
+let cookieParser = require("cookie-parser");
+
+var options = {
+  host: "localhost",
+  user: "test",
+  password: "test",
+  database: "test",
+};
+
+let sessionStore = new MySQLStore(options);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -15,7 +24,7 @@ app.use(
     secret: "0912078@@",
     resave: false,
     saveUninitialized: true,
-    store: new fileStore(),
+    store: sessionStore,
   })
 );
 
@@ -23,12 +32,7 @@ app.listen(3001, function () {
   console.log("listening on 3001");
 });
 
-var connection = mysql.createConnection({
-  host: "localhost",
-  user: "test",
-  password: "test",
-  database: "test",
-});
+var connection = mysql.createConnection(options);
 connection.connect();
 
 app.use(express.static(path.join(__dirname, "../front/build")));
@@ -55,16 +59,19 @@ app.get("/", function (req, res) {
 });
 
 app.post("/", function (req, res) {
+  console.log("session:" + req.session.user_nickname);
   res.send({
-    is_logined: req.cookies.is_logined,
-    user_nickname: req.cookies.user_nickname,
+    // is_logined: req.session.is_logined,
+    user_nickname: req.session.user_nickname,
   });
 });
 
 app.post("/logout", function (req, res) {
   console.log("im logout");
-  res.clearCookie("is_logined");
-  res.clearCookie("user_nickname").redirect("/");
+  // delete req.session.is_logined;
+  delete req.session.user_nickname;
+  // res.clearCookie("is_logined");
+  // res.clearCookie("user_nickname").redirect("/");
 });
 
 app.get("/comments", async (req, res) => {
@@ -125,12 +132,14 @@ app.post("/signup", async (req, res) => {
               [user_id, user_pw, user_nickname],
               (err, result, fields) => {
                 if (err) throw err;
-                res.cookie("is_logined", "true", {
-                  maxAge: Date.now() + 60 * 60 * 24 * 30,
-                });
-                res.cookie("user_nickname", user_nickname, {
-                  maxAge: Date.now() + 60 * 60 * 24 * 30,
-                });
+                // res.cookie("is_logined", "true", {
+                //   maxAge: Date.now() + 60 * 60 * 24 * 30,
+                // });
+                // res.cookie("user_nickname", user_nickname, {
+                //   maxAge: Date.now() + 60 * 60 * 24 * 30,
+                // });
+                // req.session.is_logined = true;
+                req.session.user_nickname = user_nickname;
                 res.end("success");
               }
             );
@@ -157,6 +166,9 @@ app.post("/signin", async (req, res) => {
 
   const login_check_get_nickname_sqlQuery =
     "select user_nickname from user_info where user_id = ? and user_pw = ?";
+  const session_check_get_session_id_sqlQuery =
+    "select json_extract(data, '$.user_nickname') as data_user_nickname from sessions where json_extract(data, '$.user_nickname') = ?";
+
   connection.query(
     login_check_get_nickname_sqlQuery,
     [user_id, user_pw],
@@ -166,14 +178,30 @@ app.post("/signin", async (req, res) => {
         res.end("아이디나 비밀번호가 틀렸습니다");
       } else {
         let user_nickname = result[0].user_nickname;
-        console.log("DEBUG user_nickname:" + user_nickname);
-        res.cookie("is_logined", "true", {
-          maxAge: Date.now() + 60 * 60 * 24 * 30,
-        });
-        res.cookie("user_nickname", user_nickname, {
-          maxAge: Date.now() + 60 * 60 * 24 * 30,
-        });
-        res.end("success");
+        // res.cookie("is_logined", "true", {
+        //   maxAge: Date.now() + 60 * 60 * 24 * 30,
+        // });
+        // res.cookie("user_nickname", user_nickname, {
+        //   maxAge: Date.now() + 60 * 60 * 24 * 30,
+        // });
+        //
+        //이미 session db에 로그인 되어 있는 게 있는 지 확인후 없으면 아래꺼 실행, 있으면 error
+        // req.session.is_logined = true;
+        connection.query(
+          session_check_get_session_id_sqlQuery,
+          [user_nickname],
+          (err, result, field) => {
+            if (err) throw err;
+            if (result.length == 0) {
+              req.session.user_nickname = user_nickname;
+              res.end("success");
+            } else {
+              let user_nickname = result[0].data_user_nickname;
+              console.log(user_nickname);
+              res.end("이미 로그인 중입니다.");
+            }
+          }
+        );
       }
     }
   );

@@ -20,7 +20,7 @@ function Home() {
         const comment_response = await axios.get(COMMENT_URL);
         setComments(comment_response.data);
         const home_response = await axios.post(HOME_URL);
-        if (home_response.data.is_logined) {
+        if (home_response.data.user_nickname) {
           setUserNickname(home_response.data.user_nickname);
         }
       } catch (e) {
