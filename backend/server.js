@@ -67,9 +67,10 @@ app.post("/", function (req, res) {
 });
 
 app.post("/logout", function (req, res) {
-  console.log("im logout");
   // delete req.session.is_logined;
-  delete req.session.user_nickname;
+  req.session.destroy(() => {
+    console.log("im logout");
+  });
   // res.clearCookie("is_logined");
   // res.clearCookie("user_nickname").redirect("/");
 });
